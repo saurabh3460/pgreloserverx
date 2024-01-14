@@ -1,0 +1,27 @@
+version: '3'
+
+services:
+  source-db:
+    image: postgres:14
+    environment:
+      POSTGRES_USER: bookworm
+      POSTGRES_PASSWORD: va3dvcm0xNA
+      POSTGRES_DB: products
+
+  destination-db:
+    image: postgres:14
+    environment:
+      POSTGRES_USER: bookworm
+      POSTGRES_PASSWORD: va3dvcm0xNA
+      POSTGRES_DB: products
+
+  pglx:
+    container_name: pglx
+    image: pglx:v0.2
+    command:
+      - "./pglx"
+      - "--source postgres://bookworm:va3dvcm0xNA@source-db:5432/products?sslmode=disable" 
+      - "--dest postgres://bookworm:va3dvcm0xNA@destination-db:5432/products?sslmode=disable" 
+    depends_on:
+      - source-db
+      - destination-db
