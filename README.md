@@ -1,3 +1,9 @@
+### PGReloServerX
+
+- "PG" represents PostgreSQL.
+- "Relo" suggests relocation.
+- "Server" indicates server-related functionality.
+- "X" imply an advanced or enterprise-level version.
 
 
 
