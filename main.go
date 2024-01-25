@@ -1,9 +1,11 @@
 package main
 
 import (
+	"context"
 	"database/sql"
 	"flag"
 	"log"
+	"time"
 
 	_ "github.com/lib/pq"
 )
@@ -42,6 +44,16 @@ func main() {
 	}
 	defer destinationDBConn.Close()
 
+	var timeout time.Duration = 5
+
+	sctx, cancel := context.WithTimeout(context.Background(), timeout*time.Second)
+	defer cancel()
+	dbConnectionCheck(sctx, sourceDBConn)
+
+	dctx, cancel := context.WithTimeout(context.Background(), timeout*time.Second)
+	defer cancel()
+	dbConnectionCheck(dctx, destinationDBConn)
+
 	// Query and log the version for the source database
 	sourceVersion, err := queryDataaseVersion(sourceDBConn)
 	if err != nil {
@@ -63,6 +75,24 @@ func main() {
 	}
 	log.Printf("Destination Database Version: %s", destinationVersion)
 
+}
+
+func dbConnectionCheck(ctx context.Context, db *sql.DB) {
+	ticker := time.NewTicker(1000 * time.Millisecond)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ctx.Done():
+			log.Fatal("Context timeout")
+		case <-ticker.C:
+			err := db.Ping()
+			if err == nil {
+				log.Println("connected")
+				return
+			}
+			log.Printf("Try connecting... Error: %v", err)
+		}
+	}
 }
 
 func queryDataaseVersion(db *sql.DB) (string, error) {
